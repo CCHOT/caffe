@@ -331,3 +331,67 @@ const char* curandGetErrorString(curandStatus_t error) {
 #endif  // CPU_ONLY
 
 }  // namespace caffe
+
+namespace RPN{
+	cv::Mat bbox_tranform_inv(cv::Mat local_anchors, cv::Mat boxs_delta){
+		cv::Mat pre_box(local_anchors.rows, local_anchors.cols, CV_32FC1);
+		for (int i = 0; i < local_anchors.rows; i++)
+		{
+			double pred_ctr_x, pred_ctr_y, src_ctr_x, src_ctr_y;
+			double dst_ctr_x, dst_ctr_y, dst_scl_x, dst_scl_y;
+			double src_w, src_h, pred_w, pred_h;
+			src_w = local_anchors.at<float>(i, 2) - local_anchors.at<float>(i, 0) + 1;
+			src_h = local_anchors.at<float>(i, 3) - local_anchors.at<float>(i, 1) + 1;
+			src_ctr_x = local_anchors.at<float>(i, 0) + 0.5 * src_w;
+			src_ctr_y = local_anchors.at<float>(i, 1) + 0.5 * src_h;
+
+			dst_ctr_x = boxs_delta.at<float>(i, 0);
+			dst_ctr_y = boxs_delta.at<float>(i, 1);
+			dst_scl_x = boxs_delta.at<float>(i, 2);
+			dst_scl_y = boxs_delta.at<float>(i, 3);
+			pred_ctr_x = dst_ctr_x*src_w + src_ctr_x;
+			pred_ctr_y = dst_ctr_y*src_h + src_ctr_y;
+			pred_w = exp(dst_scl_x) * src_w;
+			pred_h = exp(dst_scl_y) * src_h;
+
+			pre_box.at<float>(i, 0) = pred_ctr_x - 0.5*pred_w;
+			pre_box.at<float>(i, 1) = pred_ctr_y - 0.5*pred_h;
+			pre_box.at<float>(i, 2) = pred_ctr_x + 0.5*pred_w;
+			pre_box.at<float>(i, 3) = pred_ctr_y + 0.5*pred_h;
+		}
+		return pre_box;
+	}
+
+
+	void nms(std::vector<abox> &input_boxes, float nms_thresh){
+		std::vector<float>vArea(input_boxes.size());
+		for (int i = 0; i < input_boxes.size(); ++i)
+		{
+			vArea[i] = (input_boxes.at(i).x2 - input_boxes.at(i).x1 + 1)
+				* (input_boxes.at(i).y2 - input_boxes.at(i).y1 + 1);
+		}
+		for (int i = 0; i < input_boxes.size(); ++i)
+		{
+			for (int j = i + 1; j < input_boxes.size();)
+			{
+				float xx1 = std::max(input_boxes[i].x1, input_boxes[j].x1);
+				float yy1 = std::max(input_boxes[i].y1, input_boxes[j].y1);
+				float xx2 = std::min(input_boxes[i].x2, input_boxes[j].x2);
+				float yy2 = std::min(input_boxes[i].y2, input_boxes[j].y2);
+				float w = std::max(float(0), xx2 - xx1 + 1);
+				float	h = std::max(float(0), yy2 - yy1 + 1);
+				float	inter = w * h;
+				float ovr = inter / (vArea[i] + vArea[j] - inter);
+				if (ovr >= nms_thresh)
+				{
+					input_boxes.erase(input_boxes.begin() + j);
+					vArea.erase(vArea.begin() + j);
+				}
+				else
+				{
+					j++;
+				}
+			}
+		}
+	}
+}
