@@ -367,7 +367,9 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\box_annotator_ohem_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\lstm_unit_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\psroi_pooling_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\recurrent_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\smooth_l1_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_ohem_layer.cu" />

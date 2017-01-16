@@ -189,20 +189,4 @@ class Caffe {
 
 }  // namespace caffe
 
-namespace RPN{
-	struct abox
-	{
-		float x1;
-		float y1;
-		float x2;
-		float y2;
-		float score;
-		bool operator <(const abox&tmp) const{
-			return score < tmp.score;
-		}
-	};
-	void nms(std::vector<abox>& input_boxes,float nms_thresh);
-	cv::Mat bbox_tranform_inv(cv::Mat, cv::Mat);
-}
-
 #endif  // CAFFE_COMMON_HPP_
